@@ -1,12 +1,34 @@
-from decimal import Decimal
+"""
+CAMADA DE SERVIÇO do catálogo.
+
+Com a hierarquia polimórfica de `Produto`, o serviço deixa de usar
+cadeias de `if tipo == ...` para decidir comportamento. Ele apenas:
+
+  1. escolhe a CLASSE concreta correta (uma única fábrica);
+  2. deixa cada subclasse validar e calcular o que lhe compete
+     (encapsulamento + polimorfismo).
+
+Isso aplica o princípio Aberto/Fechado: para suportar um novo tipo
+de produto, cria-se uma nova subclasse — o serviço quase não muda.
+"""
 
 from sqlalchemy import func
 
 from extensions import db
 from models.produto import Produto
+from models.produto.produto_fisico import ProdutoFisico
+from models.produto.produto_digital import ProdutoDigital
+from models.produto.produto_servico import ProdutoServico
 
 
 class ProdutoService:
+
+    # Mapa tipo -> classe concreta. Substitui o encadeamento de ifs.
+    _TIPOS = {
+        "fisico": ProdutoFisico,
+        "digital": ProdutoDigital,
+        "servico": ProdutoServico
+    }
 
     @staticmethod
     def criar(produto_dto):
@@ -21,11 +43,9 @@ class ProdutoService:
                 "O nome do produto é obrigatório."
             )
 
-        if produto_dto.tipo not in [
-            "fisico",
-            "digital",
-            "servico"
-        ]:
+        classe = ProdutoService._TIPOS.get(produto_dto.tipo)
+
+        if classe is None:
             raise ValueError(
                 "Tipo inválido. Utilize: fisico, digital ou servico."
             )
@@ -45,51 +65,26 @@ class ProdutoService:
                 "Já existe um produto com esse código."
             )
 
-        produto = Produto(
+        # Monta os argumentos específicos de cada subtipo. Cada classe
+        # ignora o que não lhe diz respeito e valida o resto no __init__.
+        extras = {}
+
+        if classe is ProdutoFisico:
+            extras["estoque"] = produto_dto.estoque
+            extras["frete"] = produto_dto.frete
+        elif classe is ProdutoServico:
+            extras["prazo_execucao"] = produto_dto.prazo_execucao
+
+        # POLIMORFISMO: a mesma linha instancia o subtipo correto; a
+        # validação específica acontece dentro da subclasse escolhida.
+        produto = classe(
             codigo=produto_dto.codigo,
             nome=produto_dto.nome,
-            preco=produto_dto.preco,
-            tipo=produto_dto.tipo
+            **extras
         )
 
-        if produto_dto.tipo == "fisico":
-
-            if (
-                produto_dto.estoque is None or
-                produto_dto.estoque < 0
-            ):
-                raise ValueError(
-                    "Estoque inválido para produto físico."
-                )
-
-            if produto_dto.frete is None:
-                raise ValueError(
-                    "Valor de frete inválido."
-                )
-
-            produto.estoque = produto_dto.estoque
-            produto.frete = produto_dto.frete
-
-        elif produto_dto.tipo == "digital":
-
-            produto.estoque = None
-            produto.frete = Decimal("0.00")
-
-        elif produto_dto.tipo == "servico":
-
-            if (
-                produto_dto.prazo_execucao is None or
-                produto_dto.prazo_execucao < 0
-            ):
-                raise ValueError(
-                    "Prazo de execução inválido para o serviço."
-                )
-
-            produto.prazo_execucao = (
-                produto_dto.prazo_execucao
-            )
-
-            produto.frete = Decimal("0.00")
+        # ENCAPSULAMENTO: preço passa pela property validada.
+        produto.preco = produto_dto.preco
 
         db.session.add(produto)
         db.session.commit()
@@ -130,7 +125,9 @@ class ProdutoService:
                 "Produto não encontrado."
             )
 
-        if produto.tipo != "fisico":
+        # POLIMORFISMO: pergunta ao próprio objeto se ele controla
+        # estoque, em vez de inspecionar o campo `tipo`.
+        if not produto.pode_ter_estoque():
             raise ValueError(
                 "Somente produtos físicos possuem estoque."
             )
@@ -140,15 +137,8 @@ class ProdutoService:
                 "A quantidade informada é inválida."
             )
 
-        novo_estoque = produto.estoque + quantidade
-
-        if novo_estoque < 0:
-            raise ValueError(
-                "Operação inválida. O estoque não pode ficar negativo. "
-                f"Estoque atual: {produto.estoque}."
-            )
-
-        produto.estoque = novo_estoque
+        # A regra de "não ficar negativo" vive dentro da subclasse.
+        produto.ajustar_estoque(quantidade)
 
         db.session.commit()
 

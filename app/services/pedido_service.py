@@ -69,9 +69,11 @@ class PedidoService:
                     f"Produto {item.produto_id} não encontrado."
                 )
 
-            if produto.tipo == "fisico":
+            # POLIMORFISMO: pergunta ao objeto se ele controla estoque,
+            # sem inspecionar o campo `tipo`. Só então valida a sobra.
+            if produto.pode_ter_estoque():
 
-                if produto.estoque < item.quantidade:
+                if (produto.estoque or 0) < item.quantidade:
                     raise ValueError(
                         f"Estoque insuficiente para o produto "
                         f"'{produto.nome}'. "
@@ -85,12 +87,9 @@ class PedidoService:
                 preco * item.quantidade
             )
 
-            if produto.tipo == "fisico":
-                frete = Decimal(
-                    produto.frete or 0
-                )
-            else:
-                frete = Decimal("0.00")
+            # POLIMORFISMO: cada subtipo sabe calcular o próprio frete
+            # (físico cobra por unidade; digital e serviço devolvem 0).
+            frete = produto.calcular_frete(item.quantidade)
 
             itens_validados.append({
                 "produto": produto,
@@ -123,8 +122,10 @@ class PedidoService:
 
             db.session.add(novo_item)
 
-            if produto.tipo == "fisico":
-                produto.estoque -= item["quantidade"]
+            # POLIMORFISMO: a baixa de estoque só ocorre para quem
+            # controla estoque; a própria subclasse encapsula a regra.
+            if produto.pode_ter_estoque():
+                produto.baixar_estoque(item["quantidade"])
 
         db.session.commit()
 
