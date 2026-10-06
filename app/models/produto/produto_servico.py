@@ -17,21 +17,25 @@ class ProdutoServico(Produto):
         "polymorphic_identity": "servico"
     }
 
-    def __init__(self, *args, prazo_execucao=0, **kwargs):
-        kwargs.setdefault("tipo", "servico")
-        super().__init__(*args, **kwargs)
-        self.definir_prazo(prazo_execucao)
-        self.frete = Decimal("0.00")
+    def __init__(self, *, prazo_execucao=0, **kwargs):
+        super().__init__(**kwargs)
+        self.prazo_execucao = prazo_execucao
 
-    # ENCAPSULAMENTO: validação do prazo dentro da própria classe.
-    def definir_prazo(self, valor):
-        if valor is None or int(valor) < 0:
-            raise ValueError(
-                "Prazo de execução inválido para o serviço."
-            )
-        self.prazo_execucao = int(valor)
+    @classmethod
+    def from_dto(cls, dto) -> "ProdutoServico":
+        return cls._montar_base(dto, prazo_execucao=dto.prazo_execucao)
 
-    # -------- POLIMORFISMO: implementação do contrato Vendavel --------
+    def _validar_prazo(self, valor):
+        try:
+            prazo = int(valor)
+        except (TypeError, ValueError):
+            raise ValueError("Prazo de execução inválido para o serviço.")
+
+        if prazo < 0:
+            raise ValueError("O prazo de execução não pode ser negativo.")
+
+        return prazo
+
     def calcular_frete(self, quantidade: int) -> Decimal:
         return Decimal("0.00")
 
@@ -41,6 +45,5 @@ class ProdutoServico(Produto):
     def descricao_tipo(self) -> str:
         return "Serviço (prazo de execução em dias, sem frete)"
 
-    # Acrescenta o prazo ao JSON de resposta (extensão polimórfica).
     def _dados_especificos(self) -> dict:
         return {"prazo_execucao_dias": self.prazo_execucao}

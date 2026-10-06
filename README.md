@@ -36,32 +36,59 @@ A API sobe em `http://localhost:8000`. A rota `GET /` lista todas as rotas.
 
 Toda a hierarquia de `Produto` foi modelada com **Single Table Inheritance**
 do SQLAlchemy: as subclasses compartilham a tabela `produtos` e a coluna
-`tipo` é o discriminador. Assim o banco (`instance/database.db`) continua
-igual, mas o código passa a ser orientado a objetos de verdade.
+`tipo` é o discriminador. O esquema do banco não mudou, mas o código passa
+a ser orientado a objetos de verdade.
 
 | Pilar | Onde está aplicado | Como |
 |-------|--------------------|------|
-| **Interface** | `app/models/vendavel.py` | `Vendavel(ABC)` define o contrato de um item vendável (`calcular_valor_total`, `calcular_frete`, `pode_ter_estoque`, `descricao_tipo`) sem implementação. |
-| **Abstração / Classe Abstrata** | `app/models/produto.py` | `Produto` implementa parte do contrato e deixa métodos abstratos. A base **não é instanciável** (`TypeError` ao tentar). |
-| **Herança** | `produto_fisico.py`, `produto_digital.py`, `produto_servico.py` | `ProdutoFisico`, `ProdutoDigital`, `ProdutoServico` herdam de `Produto`. |
-| **Encapsulamento** | `produto.py` (property `preco` sobre a coluna `_preco`); `ProdutoFisico.definir_estoque/definir_frete`; `ProdutoServico.definir_prazo` | O estado interno só muda passando por validação. |
-| **Polimorfismo** | `calcular_frete`, `pode_ter_estoque`, `descricao_tipo`, `_dados_especificos` | Cada subclasse responde ao mesmo método de forma diferente. Físico cobra frete e tem estoque; digital e serviço não. |
-| **Associação** | `models/produto.py` ↔ `models/item_pedido.py` | `Produto` ↔ `ItemPedido` via `relationship`. |
+| **Interface** | `app/models/produto/vendavel.py` | `Vendavel(ABC)` define o contrato de um item vendável (`calcular_valor_total`, `calcular_frete`, `pode_ter_estoque`, `verificar_disponibilidade`, `baixar_estoque`, `descricao_tipo`) sem implementação. |
+| **Abstração / Classe Abstrata** | `app/models/produto/produto.py` | `Produto` implementa parte do contrato e deixa `calcular_frete`, `pode_ter_estoque` e `descricao_tipo` abstratos. A base **não é instanciável** (`TypeError` ao tentar). |
+| **Herança** | `produto_fisico.py`, `produto_digital.py`, `produto_servico.py` | `ProdutoFisico`, `ProdutoDigital` e `ProdutoServico` herdam de `Produto` e reaproveitam a fábrica, as properties e a serialização da base. |
+| **Encapsulamento** | `produto.py`: properties `preco`, `estoque`, `frete`, `prazo_execucao` sobre as colunas `_preco`, `_estoque`, `_frete`, `_prazo_execucao` | Nenhum atributo muda sem validação. A base **recusa** estoque, frete e prazo por padrão; só a subclasse que possui o atributo sobrescreve o gancho `_validar_*` e o aceita. Ex.: `digital.estoque = 99` e `fisico.estoque = -50` lançam `ValueError`. |
+| **Polimorfismo** | `from_dto`, `calcular_frete`, `verificar_disponibilidade`, `baixar_estoque`, `_validar_*`, `_dados_especificos`, `descricao_tipo` | Cada subclasse responde à mesma mensagem de forma diferente. Ex.: físico confere e baixa estoque; digital e serviço herdam a versão padrão, que não faz nada. |
+| **Associação** | `models/produto/produto.py` ↔ `models/item_pedido.py` | `Produto` ↔ `ItemPedido` via `relationship`. |
 | **Agregação / Composição** | `models/pedido.py` | `Pedido` compõe seus `ItemPedido` (`cascade="all, delete-orphan"` → o item não existe sem o pedido). |
+
+Padrões usados:
+
+- **Factory Method**: `Produto.criar(dto)` resolve a subclasse pelo mapa
+  polimórfico do próprio SQLAlchemy (`resolver_classe`) e chama
+  `Subclasse.from_dto(dto)`. Não existe dicionário `tipo → classe`
+  mantido à mão.
+- **Template Method**: `calcular_valor_total = calcular_subtotal + calcular_frete`.
+  O algoritmo fica na base e o passo `calcular_frete` é definido por cada
+  subclasse.
+
+### Separação de responsabilidades
+
+| Camada | Responsabilidade |
+|--------|------------------|
+| `controllers/produto_controller.py` | Lê a requisição HTTP, monta o DTO e traduz exceções em códigos HTTP. Não converte nem valida dados. |
+| `dtos/produto_dto.py`, `dtos/estoque_dto.py` | Convertem e limpam o JSON bruto (texto → número, `strip`, `lower`). |
+| `services/produto_service.py` | Orquestra: verifica a unicidade do código, delega a criação a `Produto.criar` e persiste. Não conhece os tipos concretos. |
+| `models/produto/*` | Regras de negócio de cada tipo: validação, cálculo de valor/frete e estoque. |
 
 ### Onde o polimorfismo substituiu o `if tipo`
 
-Antes, a lógica dependia de `if produto.tipo == "fisico"` espalhado pelos
-serviços. Depois da refatoração:
+- `produto_service.py`: `Produto.criar(dto)` no lugar da cadeia
+  `if classe is ProdutoFisico / elif ProdutoServico`.
+- `pedido_service.py`: `produto.verificar_disponibilidade(qtd)`,
+  `produto.calcular_subtotal(qtd)`, `produto.calcular_frete(qtd)` e
+  `produto.baixar_estoque(qtd)` são chamados para qualquer tipo, sem
+  `if produto.pode_ter_estoque()`.
 
-- `app/services/produto_service.py` → fábrica `_TIPOS` (tipo → classe) e
-  chamadas a `produto.pode_ter_estoque()` / `produto.ajustar_estoque()`.
-- `app/services/pedido_service.py` → `produto.pode_ter_estoque()`,
-  `produto.calcular_frete(qtd)`, `produto.baixar_estoque(qtd)`.
+**Aberto/Fechado:** para adicionar um tipo novo, basta criar uma subclasse
+de `Produto` com `polymorphic_identity`, `from_dto` e os métodos abstratos,
+e importá-la em `models/produto/__init__.py`. Services e controllers não mudam.
 
-Para adicionar um novo tipo de produto, basta criar uma nova subclasse de
-`Produto` e registrá-la em `_TIPOS` — os serviços praticamente não mudam
-(princípio Aberto/Fechado).
+### Formato de resposta de produto
+
+Os campos comuns (`id`, `codigo`, `nome`, `preco`, `tipo`, `tipo_descricao`)
+aparecem para todo produto. Cada tipo acrescenta só os seus campos:
+
+- físico: `estoque`, `frete`
+- serviço: `prazo_execucao_dias`
+- digital: nenhum campo extra
 
 ---
 
@@ -70,15 +97,20 @@ Para adicionar um novo tipo de produto, basta criar uma nova subclasse de
 ```
 app/
 ├── models/
-│   ├── vendavel.py          # Interface (ABC) — contrato Vendavel
-│   ├── produto.py           # Classe ABSTRATA base + STI + encapsulamento
-│   ├── produto_fisico.py    # Subclasse concreta (estoque + frete)
-│   ├── produto_digital.py   # Subclasse concreta (sem estoque/frete)
-│   ├── produto_servico.py   # Subclasse concreta (prazo de execução)
-│   └── ...
+│   ├── produto/
+│   │   ├── vendavel.py          # Interface (ABC): contrato Vendavel
+│   │   ├── produto.py           # Classe ABSTRATA base + STI + fábrica + encapsulamento
+│   │   ├── produto_fisico.py    # Subclasse concreta (estoque + frete)
+│   │   ├── produto_digital.py   # Subclasse concreta (sem estoque/frete)
+│   │   └── produto_servico.py   # Subclasse concreta (prazo de execução)
+│   ├── pedido.py                # Composição com ItemPedido
+│   └── item_pedido.py
+├── dtos/
+│   ├── produto_dto.py           # Conversão do JSON de criação
+│   └── estoque_dto.py           # Conversão do JSON de ajuste de estoque
 ├── services/
-│   ├── produto_service.py   # Fábrica polimórfica, sem if tipo
-│   └── pedido_service.py    # Usa métodos polimórficos do produto
+│   ├── produto_service.py       # Orquestração, sem if tipo
+│   └── pedido_service.py        # Usa o contrato Vendavel do produto
 └── controllers/
-    └── produto_controller.py  # Rotas HTTP (inalteradas)
+    └── produto_controller.py    # Rotas HTTP (só entrada/saída)
 ```

@@ -40,6 +40,18 @@ class Vendavel(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def verificar_disponibilidade(self, quantidade: int) -> None:
+        """Lança ValueError se `quantidade` unidades não puderem ser
+        vendidas. Itens sem estoque estão sempre disponíveis."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def baixar_estoque(self, quantidade: int) -> None:
+        """Registra a saída de `quantidade` unidades vendidas.
+        Itens sem estoque não fazem nada."""
+        raise NotImplementedError
+
+    @abstractmethod
     def descricao_tipo(self) -> str:
         """Descrição legível do tipo do item (para relatórios/UI)."""
         raise NotImplementedError

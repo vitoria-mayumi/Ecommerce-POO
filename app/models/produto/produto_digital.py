@@ -4,6 +4,10 @@ SUBCLASSE CONCRETA -> Pilares: Herança + Polimorfismo.
 `ProdutoDigital` representa itens entregues eletronicamente
 (e-books, licenças, downloads). Não tem estoque físico e nunca
 cobra frete -> implementa o contrato de forma diferente do físico.
+
+Não sobrescreve os ganchos `_validar_estoque`/`_validar_frete`, então
+herda o comportamento da base: qualquer tentativa de atribuir estoque
+ou frete a um produto digital é recusada.
 """
 
 from decimal import Decimal
@@ -17,14 +21,10 @@ class ProdutoDigital(Produto):
         "polymorphic_identity": "digital"
     }
 
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("tipo", "digital")
-        super().__init__(*args, **kwargs)
-        # Produto digital: sem estoque, frete sempre zero.
-        self.estoque = None
-        self.frete = Decimal("0.00")
+    @classmethod
+    def from_dto(cls, dto) -> "ProdutoDigital":
+        return cls._montar_base(dto)
 
-    # -------- POLIMORFISMO: mesmo contrato, comportamento próprio -----
     def calcular_frete(self, quantidade: int) -> Decimal:
         return Decimal("0.00")
 
