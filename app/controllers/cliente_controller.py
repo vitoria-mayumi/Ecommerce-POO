@@ -5,20 +5,6 @@ from services.cliente_service import ClienteService
 from utils.respostas import resposta_erro, resposta_sucesso
 
 
-# =====================================================================
-# PILAR: ABSTRAÇÃO (separação em camadas)
-# ---------------------------------------------------------------------
-# O controller cuida APENAS do HTTP (entrada/saída). Ele não conhece
-# regras de negócio nem acesso ao banco — delega isso ao DTO (validação
-# de dados) e ao Service (regras + persistência). Cada camada expõe uma
-# interface simples e esconde seus detalhes internos.
-#
-# PILAR: ENCAPSULAMENTO (entre camadas)
-# ---------------------------------------------------------------------
-# As responsabilidades ficam encapsuladas: o controller não acessa a
-# model diretamente nem monta queries; usa somente os métodos públicos
-# de ClienteDTO e ClienteService.
-# =====================================================================
 cliente_controller = Blueprint(
     "cliente_controller",
     __name__
@@ -39,18 +25,10 @@ def cadastrar_cliente():
         )
 
     try:
-
-        # ABSTRAÇÃO: o controller só pede "crie um DTO a partir destes
-        # dados" e "crie um cliente com este DTO". Como a validação,
-        # normalização e persistência acontecem está escondido nas
-        # camadas DTO/Service.
         dto = ClienteDTO.from_dict(dados)
 
         cliente = ClienteService.criar(dto)
 
-        # POLIMORFISMO: cliente.to_dict() segue o contrato de
-        # EntidadeBase; o controller o chama sem conhecer o tipo
-        # concreto por trás.
         return resposta_sucesso(
             "Cliente cadastrado com sucesso.",
             cliente.to_dict(),
@@ -85,8 +63,6 @@ def listar_clientes():
             []
         )
 
-    # POLIMORFISMO: cada item responde ao mesmo to_dict() de forma
-    # uniforme, independente de detalhes internos da entidade.
     return resposta_sucesso(
         "Clientes encontrados.",
         [
