@@ -5,11 +5,13 @@ from utils.validacoes import converter_inteiro
 
 
 @dataclass
+#Os dados ficam organizados dentro de objetos(Encapsulamento)
 class ItemPedidoDTO:
     produto_id: int
     quantidade: int
 
     @classmethod
+    #Esconde a complexidade da conversão do JSON(Abstração)
     def from_dict(cls, dados):
         return cls(
             produto_id=converter_inteiro(
@@ -22,6 +24,7 @@ class ItemPedidoDTO:
 
 
 @dataclass
+#Um objeto é formado por outros objetos(Composição)
 class PedidoDTO:
     cliente_id: int
     itens: List[ItemPedidoDTO]

@@ -10,7 +10,6 @@ pedido_controller = Blueprint(
     __name__
 )
 
-
 @pedido_controller.route(
     "/pedidos",
     methods=["POST"]
@@ -25,13 +24,14 @@ def criar_pedido():
         )
 
     try:
-
+        # Converte os dados recebidos em um objeto DTO (Abstração)
         dto = PedidoDTO.from_dict(dados)
 
         pedido = PedidoService.criar(dto)
 
         return resposta_sucesso(
             "Pedido criado com sucesso.",
+            # Converte o objeto pedido para dicionário (Encapsulamento)
             pedido.to_dict(),
             201
         )
@@ -57,7 +57,7 @@ def criar_pedido():
 def listar_pedidos_cliente(cliente_id):
 
     try:
-
+        # Solicita ao Service os pedidos daquele cliente (Abstração)
         pedidos = PedidoService.listar_por_cliente(
             cliente_id
         )
@@ -65,7 +65,7 @@ def listar_pedidos_cliente(cliente_id):
         if not pedidos:
             return resposta_sucesso(
                 "O cliente ainda não possui pedidos.",
-                []
+
             )
 
         return resposta_sucesso(
@@ -88,3 +88,6 @@ def listar_pedidos_cliente(cliente_id):
         return resposta_erro(
             str(erro)
         )
+
+
+
