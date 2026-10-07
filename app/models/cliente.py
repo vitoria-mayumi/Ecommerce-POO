@@ -1,10 +1,11 @@
 from extensions import db
 
+from models.base import EntidadeBase
 
-class Cliente(db.Model):
+
+class Cliente(EntidadeBase):
     __tablename__ = "clientes"
 
-    id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(150), nullable=False)
     endereco = db.Column(db.String(250), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)

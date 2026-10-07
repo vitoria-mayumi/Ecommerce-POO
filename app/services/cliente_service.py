@@ -1,13 +1,15 @@
 from sqlalchemy import func
 
-from extensions import db
 from models.cliente import Cliente
 
+from services.base_service import BaseService
 
-class ClienteService:
 
-    @staticmethod
-    def criar(cliente_dto):
+class ClienteService(BaseService):
+    model = Cliente
+
+    @classmethod
+    def criar(cls, cliente_dto):
 
         erro = cliente_dto.validar()
 
@@ -15,8 +17,7 @@ class ClienteService:
             raise ValueError(erro)
 
         cliente_existente = Cliente.query.filter(
-            func.lower(Cliente.email) ==
-            cliente_dto.email
+            func.lower(Cliente.email) == cliente_dto.email
         ).first()
 
         if cliente_existente:
@@ -30,34 +31,9 @@ class ClienteService:
             email=cliente_dto.email
         )
 
-        db.session.add(cliente)
-        db.session.commit()
+        return cls._salvar(cliente)
 
-        return cliente
+    @classmethod
+    def listar(cls):
+        return Cliente.query.order_by(Cliente.nome).all()
 
-    @staticmethod
-    def listar():
-
-        return Cliente.query.order_by(
-            Cliente.nome
-        ).all()
-
-    @staticmethod
-    def buscar_por_id(cliente_id):
-
-        if cliente_id <= 0:
-            raise ValueError(
-                "Índice de cliente inválido."
-            )
-
-        cliente = db.session.get(
-            Cliente,
-            cliente_id
-        )
-
-        if cliente is None:
-            raise LookupError(
-                "Cliente não encontrado."
-            )
-
-        return cliente

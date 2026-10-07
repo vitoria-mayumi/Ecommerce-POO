@@ -25,7 +25,6 @@ def cadastrar_cliente():
         )
 
     try:
-
         dto = ClienteDTO.from_dict(dados)
 
         cliente = ClienteService.criar(dto)
