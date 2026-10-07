@@ -5,12 +5,12 @@ from models.item_pedido import ItemPedido
 from models.produto import Produto
 from services.cliente_service import ClienteService
 
-
+#Concentra as regras de negócio e esconde detalhes do Controller(Abstração)
 class PedidoService:
 
     @staticmethod
     def criar(pedido_dto):
-
+        # Os objetos se relacionam para formar o pedido(Composição)
         if (
             pedido_dto.cliente_id is None or
             pedido_dto.cliente_id <= 0
@@ -54,7 +54,7 @@ class PedidoService:
                     "A quantidade deve ser um número inteiro "
                     "maior que zero."
                 )
-
+           # Os objetos possuem seus próprios dados e comportamentos(Encapsulamento)
             produto = db.session.get(
                 Produto,
                 item.produto_id
@@ -75,6 +75,9 @@ class PedidoService:
                 "frete": produto.calcular_frete(item.quantidade)
             })
 
+        # Segunda etapa:
+        # persistir o pedido.
+        # Os objetos possuem seus próprios dados e comportamentos(Encapsulamento)
         pedido = Pedido(
             cliente=cliente
         )
