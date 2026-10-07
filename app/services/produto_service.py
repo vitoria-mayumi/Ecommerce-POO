@@ -1,17 +1,3 @@
-"""
-CAMADA DE SERVIÇO do catálogo.
-
-Com a hierarquia polimórfica de `Produto`, o serviço deixa de usar
-cadeias de `if tipo == ...` para decidir comportamento. Ele apenas:
-
-  1. escolhe a CLASSE concreta correta (uma única fábrica);
-  2. deixa cada subclasse validar e calcular o que lhe compete
-     (encapsulamento + polimorfismo).
-
-Isso aplica o princípio Aberto/Fechado: para suportar um novo tipo
-de produto, cria-se uma nova subclasse — o serviço quase não muda.
-"""
-
 from sqlalchemy import func
 
 from extensions import db
@@ -22,9 +8,6 @@ class ProdutoService:
 
     @staticmethod
     def criar(produto_dto):
-        """Orquestra a criação: garante unicidade de código, delega a
-        construção do tipo certo à fábrica polimórfica de `Produto` e
-        persiste. Nenhuma regra específica de tipo vive aqui."""
 
         produto_existente = Produto.query.filter_by(
             codigo=produto_dto.codigo

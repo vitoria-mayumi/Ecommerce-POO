@@ -1,26 +1,3 @@
-"""
-CLASSE ABSTRATA BASE -> Pilares: Abstração, Herança, Encapsulamento,
-Polimorfismo e Interface.
-
-`Produto` é a superclasse ABSTRATA de toda a hierarquia de itens do
-catálogo. Ela:
-
-- IMPLEMENTA a interface `Vendavel` (programação voltada ao contrato);
-- usa SQLAlchemy "Single Table Inheritance" (STI): todas as subclasses
-  compartilham a MESMA tabela `produtos`, e a coluna `tipo` funciona
-  como discriminador polimórfico. Assim o banco existente é preservado;
-- ENCAPSULA todo o estado (preço, estoque, frete, prazo) atrás de
-  properties: nenhuma coluna é alterada sem passar por validação;
-- fornece uma FÁBRICA polimórfica (`criar`) que escolhe a subclasse
-  concreta sem nenhum `if tipo == ...`.
-
-Produto é abstrata porque deixa métodos do contrato `Vendavel` sem
-implementação (`calcular_frete`, `pode_ter_estoque`, `descricao_tipo`).
-Tentar `Produto(...)` lança TypeError. A `polymorphic_identity`
-"produto" existe apenas porque o SQLAlchemy exige uma identidade no
-mapper base; `resolver_classe` impede que ela seja usada para criação.
-"""
-
 from decimal import Decimal
 
 from extensions import db
@@ -55,7 +32,6 @@ class Produto(db.Model, Vendavel, metaclass=_ABCModelMeta):
 
     @classmethod
     def resolver_classe(cls, tipo: str) -> type:
-        """Mapeia o discriminador `tipo` para a subclasse concreta."""
         mapper = cls.__mapper__.polymorphic_map.get(tipo) if tipo else None
 
         if mapper is None or mapper.class_ is Produto:
@@ -67,8 +43,6 @@ class Produto(db.Model, Vendavel, metaclass=_ABCModelMeta):
 
     @classmethod
     def criar(cls, dto) -> "Produto":
-        """Ponto único de criação. Valida o que é comum a todo produto
-        e delega a construção específica à subclasse (polimorfismo)."""
         if not dto.codigo:
             raise ValueError("O código do produto é obrigatório.")
 
@@ -81,9 +55,6 @@ class Produto(db.Model, Vendavel, metaclass=_ABCModelMeta):
 
     @classmethod
     def _montar_base(cls, dto, **especificos) -> "Produto":
-        """Helper usado pelas subclasses em `from_dto`: monta a parte
-        COMUM (código, nome, preço) e repassa os campos específicos ao
-        construtor da subclasse."""
         produto = cls(codigo=dto.codigo, nome=dto.nome, **especificos)
         produto.preco = dto.preco
         return produto
@@ -145,12 +116,9 @@ class Produto(db.Model, Vendavel, metaclass=_ABCModelMeta):
         raise ValueError("Somente serviços possuem prazo de execução.")
 
     def calcular_subtotal(self, quantidade: int) -> Decimal:
-        """Valor das unidades, sem frete."""
         return self.preco * Decimal(quantidade)
 
     def calcular_valor_total(self, quantidade: int) -> Decimal:
-        """TEMPLATE METHOD: o algoritmo é fixo (subtotal + frete), mas o
-        passo `calcular_frete` é definido por cada subclasse."""
         return self.calcular_subtotal(quantidade) + self.calcular_frete(quantidade)
 
     def verificar_disponibilidade(self, quantidade: int) -> None:
@@ -172,5 +140,4 @@ class Produto(db.Model, Vendavel, metaclass=_ABCModelMeta):
         return dados
 
     def _dados_especificos(self) -> dict:
-        """Gancho de extensão. Subclasses sobrescrevem se necessário."""
         return {}

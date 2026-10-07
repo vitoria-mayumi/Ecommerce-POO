@@ -1,11 +1,3 @@
-"""
-SUBCLASSE CONCRETA -> Pilares: Herança + Polimorfismo + Encapsulamento.
-
-`ProdutoServico` representa serviços prestados (ex.: instalação,
-consultoria). Não tem estoque nem frete, mas possui um PRAZO DE
-EXECUÇÃO em dias, que não existe nos demais tipos.
-"""
-
 from decimal import Decimal
 
 from models.produto import Produto

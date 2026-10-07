@@ -1,15 +1,3 @@
-"""
-SUBCLASSE CONCRETA -> Pilares: Herança + Polimorfismo.
-
-`ProdutoDigital` representa itens entregues eletronicamente
-(e-books, licenças, downloads). Não tem estoque físico e nunca
-cobra frete -> implementa o contrato de forma diferente do físico.
-
-Não sobrescreve os ganchos `_validar_estoque`/`_validar_frete`, então
-herda o comportamento da base: qualquer tentativa de atribuir estoque
-ou frete a um produto digital é recusada.
-"""
-
 from decimal import Decimal
 
 from models.produto import Produto

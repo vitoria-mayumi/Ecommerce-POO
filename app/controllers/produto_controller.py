@@ -1,23 +1,3 @@
-"""
-CONTROLLER (Controlador) do módulo de produtos.
-
-Esta é a "porta de entrada" do sistema para o mundo externo. Quando
-alguém faz uma requisição HTTP (ex.: pelo navegador, por um app ou por
-uma ferramenta como o Postman), é aqui que o pedido chega primeiro.
-
-A responsabilidade do controller é apenas INTERMEDIAR:
-  1. receber a requisição e ler os dados enviados;
-  2. repassar o trabalho pesado para o ProdutoService (a regra de negócio);
-  3. devolver uma resposta HTTP adequada (sucesso ou erro).
-
-Repare que NÃO existe nenhuma lógica de "se o produto é físico/digital"
-aqui. Isso é proposital: toda a complexidade dos tipos de produto está
-encapsulada nas classes de modelo e no service. O controller conversa
-apenas com a abstração (ProdutoService), sem conhecer os tipos concretos.
-Isso mantém cada camada com uma responsabilidade só (separação de
-responsabilidades).
-"""
-
 from flask import Blueprint, request
 
 from dtos.produto_dto import ProdutoDTO

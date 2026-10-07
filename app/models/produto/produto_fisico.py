@@ -1,14 +1,3 @@
-"""
-SUBCLASSE CONCRETA -> Pilares: Herança + Polimorfismo + Encapsulamento.
-
-`ProdutoFisico` HERDA de `Produto` e especializa o comportamento:
-é o único tipo que controla ESTOQUE e cobra FRETE por unidade.
-
-`polymorphic_identity = "fisico"` casa com o valor da coluna
-discriminadora `tipo`, de modo que o SQLAlchemy reconstrói a instância
-na subclasse correta ao ler do banco (polimorfismo do ORM).
-"""
-
 from decimal import Decimal, InvalidOperation
 
 from models.produto import Produto
@@ -67,7 +56,6 @@ class ProdutoFisico(Produto):
         self.estoque = self.estoque - quantidade
 
     def ajustar_estoque(self, variacao: int) -> None:
-        """Soma (ou subtrai) uma variação, bloqueando valor negativo."""
         novo_estoque = (self.estoque or 0) + variacao
         if novo_estoque < 0:
             raise ValueError(
