@@ -1,0 +1,39 @@
+# Ambientes virtuais
+venv/
+.venv/
+env/
+ENV/
+
+# Caches e bytecode do Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Banco de dados SQLite (gerado em tempo de execução)
+*.db
+*.sqlite
+*.sqlite3
+instance/
+app/instance/
+
+# Flask
+.flaskenv
+
+# Variáveis de ambiente / segredos
+.env
+.env.*
+
+# Logs
+*.log
+
+# Artefatos de sistema operacional
+.DS_Store
+Thumbs.db
+
+# Configurações de editores/IDEs
+.vscode/
+.idea/
+*.swp

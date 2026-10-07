@@ -1,6 +1,7 @@
 from flask import Blueprint, request
 
 from dtos.produto_dto import ProdutoDTO
+from dtos.estoque_dto import EstoqueDTO
 from services.produto_service import ProdutoService
 from utils.respostas import resposta_erro, resposta_sucesso
 
@@ -10,13 +11,11 @@ produto_controller = Blueprint(
     __name__
 )
 
-
 @produto_controller.route(
     "/produtos",
     methods=["POST"]
 )
 def adicionar_produto():
-
     dados = request.get_json(silent=True)
 
     if not dados:
@@ -26,7 +25,6 @@ def adicionar_produto():
 
     try:
         dto = ProdutoDTO.from_dict(dados)
-
         produto = ProdutoService.criar(dto)
 
         return resposta_sucesso(
@@ -119,17 +117,12 @@ def atualizar_estoque(produto_id):
             "Nenhum dado foi informado."
         )
 
-    from utils.validacoes import converter_inteiro
-
-    quantidade = converter_inteiro(
-        dados.get("quantidade")
-    )
+    estoque_dto = EstoqueDTO.from_dict(dados)
 
     try:
-
         produto = ProdutoService.atualizar_estoque(
             produto_id,
-            quantidade
+            estoque_dto
         )
 
         return resposta_sucesso(

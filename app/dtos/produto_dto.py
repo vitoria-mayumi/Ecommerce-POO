@@ -1,15 +1,14 @@
 from dataclasses import dataclass
 from typing import Any, Optional
-
 from utils.validacoes import converter_inteiro, converter_preco
-
-
 @dataclass
 class ProdutoDTO:
     codigo: str
     nome: str
     tipo: str
     preco: Any
+
+
     estoque: Optional[int] = None
     frete: Any = 0
     prazo_execucao: Optional[int] = None

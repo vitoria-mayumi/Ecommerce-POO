@@ -2,8 +2,14 @@ from flask import Flask
 
 from extensions import db
 
-from models import (
+from models.produto import (
     Produto,
+    ProdutoFisico,
+    ProdutoDigital,
+    ProdutoServico
+)
+
+from models import (
     Cliente,
     Pedido,
     ItemPedido
@@ -90,6 +96,6 @@ app = create_app()
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
-        port=5000,
+        port=8000,
         debug=True
     )

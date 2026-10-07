@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from extensions import db
 from models.cliente import Cliente
 from models.pedido import Pedido
@@ -38,8 +36,6 @@ class PedidoService:
 
         itens_validados = []
 
-        # Primeira etapa:
-        # validar tudo antes de alterar o banco.
         for item in pedido_dto.itens:
 
             if (
@@ -69,39 +65,16 @@ class PedidoService:
                     f"Produto {item.produto_id} não encontrado."
                 )
 
-            if produto.tipo == "fisico":
-
-                if produto.estoque < item.quantidade:
-                    raise ValueError(
-                        f"Estoque insuficiente para o produto "
-                        f"'{produto.nome}'. "
-                        f"Disponível: {produto.estoque}; "
-                        f"solicitado: {item.quantidade}."
-                    )
-
-            preco = Decimal(produto.preco)
-
-            subtotal = (
-                preco * item.quantidade
-            )
-
-            if produto.tipo == "fisico":
-                frete = Decimal(
-                    produto.frete or 0
-                )
-            else:
-                frete = Decimal("0.00")
+            produto.verificar_disponibilidade(item.quantidade)
 
             itens_validados.append({
                 "produto": produto,
                 "quantidade": item.quantidade,
-                "preco": preco,
-                "subtotal": subtotal,
-                "frete": frete
+                "preco": produto.preco,
+                "subtotal": produto.calcular_subtotal(item.quantidade),
+                "frete": produto.calcular_frete(item.quantidade)
             })
 
-        # Segunda etapa:
-        # persistir o pedido.
         pedido = Pedido(
             cliente=cliente
         )
@@ -123,8 +96,7 @@ class PedidoService:
 
             db.session.add(novo_item)
 
-            if produto.tipo == "fisico":
-                produto.estoque -= item["quantidade"]
+            produto.baixar_estoque(item["quantidade"])
 
         db.session.commit()
 
