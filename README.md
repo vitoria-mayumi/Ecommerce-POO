@@ -13,7 +13,6 @@ As três operações de produto exigidas na atividade são:
 ## Como configurar o ambiente
 
 ### Windows
-
 ```
 py -m venv venv
 .\venv\Scripts\python.exe -m pip install Flask Flask-SQLAlchemy
@@ -21,7 +20,6 @@ py -m venv venv
 ```
 
 ### macOS / Linux
-
 ```
 python3 -m venv venv
 venv/bin/python -m pip install Flask Flask-SQLAlchemy

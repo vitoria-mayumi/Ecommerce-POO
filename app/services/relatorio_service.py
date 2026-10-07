@@ -9,20 +9,32 @@ from models.item_pedido import ItemPedido
 
 class RelatorioService:
 
-    @staticmethod
-    def vendas():
+    def __init__(self):
+        self.produtos = Produto.query.all()
 
-        produtos = Produto.query.all()
+    def vendas(self):
 
-        if not produtos:
+        if not self.produtos:
             return {
                 "produtos_mais_vendidos": [],
                 "faturamento_total": 0
             }
 
+        produtos_mais_vendidos = self._montar_produtos_vendidos()
+        faturamento = self._calcular_faturamento()
+
+        return {
+            "produtos_mais_vendidos": produtos_mais_vendidos,
+            "faturamento_produtos": faturamento["produtos"],
+            "faturamento_frete": faturamento["frete"],
+            "faturamento_total": faturamento["total"]
+        }
+
+    def _montar_produtos_vendidos(self):
+
         resultado = []
 
-        for produto in produtos:
+        for produto in self.produtos:
 
             quantidade_vendida = db.session.query(
                 func.coalesce(
@@ -59,6 +71,10 @@ class RelatorioService:
             reverse=True
         )
 
+        return resultado
+
+    def _calcular_faturamento(self):
+
         faturamento_produtos = db.session.query(
             func.coalesce(
                 func.sum(ItemPedido.subtotal),
@@ -79,14 +95,7 @@ class RelatorioService:
         )
 
         return {
-            "produtos_mais_vendidos": resultado,
-            "faturamento_produtos": float(
-                faturamento_produtos or 0
-            ),
-            "faturamento_frete": float(
-                faturamento_frete or 0
-            ),
-            "faturamento_total": float(
-                faturamento_consolidado
-            )
+            "produtos": float(faturamento_produtos or 0),
+            "frete": float(faturamento_frete or 0),
+            "total": float(faturamento_consolidado)
         }

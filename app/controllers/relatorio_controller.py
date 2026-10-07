@@ -16,7 +16,8 @@ relatorio_controller = Blueprint(
 )
 def relatorio_vendas():
 
-    dados = RelatorioService.vendas()
+    relatorio = RelatorioService()
+    dados = relatorio.vendas()
 
     if not dados.get("produtos_mais_vendidos"):
         return resposta_sucesso(
