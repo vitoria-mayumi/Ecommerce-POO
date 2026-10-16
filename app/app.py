@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 
 from extensions import db
 
@@ -28,6 +29,8 @@ from utils.respostas import resposta_sucesso
 def create_app():
 
     app = Flask(__name__)
+
+    CORS(app)
 
     app.config["SQLALCHEMY_DATABASE_URI"] = (
         "sqlite:///database.db"
