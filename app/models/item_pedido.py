@@ -55,226 +55,146 @@ class ItemPedido(db.Model):
         }
 
 # ============================================================
-# 1. ABSTRAÇÃO
+# DEMONSTRAÇÃO DIDÁTICA DOS PILARES DA ORIENTAÇÃO A OBJETOS
+# ------------------------------------------------------------
+# As classes abaixo não participam do mapeamento do SQLAlchemy.
+# Elas existem apenas para ilustrar, de forma isolada e
+# executável, cada um dos pilares de POO.
 # ============================================================
 
-class OperacaoItemPedido:
+
+# ============================================================
+# 1. ABSTRAÇÃO + 2. CLASSE ABSTRATA
+# ------------------------------------------------------------
+# Uma classe abstrata (ABC) define um contrato: todo item
+# calculável precisa saber calcular seu total, mas o "como"
+# é escondido de quem usa (abstração).
+# ============================================================
+
+class ItemCalculavel(ABC):
 
     @abstractmethod
-    def executar(self):
-        pass
+    def calcular_total(self) -> float:
+        """Contrato que as subclasses são obrigadas a implementar."""
+        raise NotImplementedError
 
 
 # ============================================================
-# 2. CLASSE ABSTRATA
+# 3. HERANÇA + 4. ENCAPSULAMENTO
+# ------------------------------------------------------------
+# ItemPedidoEspecial HERDA de ItemCalculavel e ENCAPSULA seus
+# dados em atributos privados (prefixo "__"), expostos apenas
+# por métodos de acesso controlados.
 # ============================================================
 
-class ItemPedidoAbstrato(ABC):
+class ItemPedidoEspecial(ItemCalculavel):
 
-    @abstractmethod
-    def calcular_total(self):
-        """
-        Define uma operação que as classes
-        filhas deverão implementar.
-        """
-        pass
-
-# ============================================================
-# 4. HERANÇA
-# ============================================================
-
-class ItemPedidoEspecial(ItemPedidoAbstrato):
-
-    def __init__(
-        self,
-        quantidade,
-        preco_unitario
-    ):
-
-        self.quantidade = quantidade
-        self.preco_unitario = preco_unitario
-
-    def calcular_total(self):
-        return (
-            self.quantidade *
-            self.preco_unitario
-        )
-
-
-# ============================================================
-# 5. ENCAPSULAMENTO
-# ============================================================
-
-class CalculadoraItem:
-
-    def __init__(self, quantidade, preco):
-
+    def __init__(self, quantidade: int, preco_unitario: float):
         self.__quantidade = quantidade
-        self.__preco = preco
+        self.__preco_unitario = preco_unitario
 
-    def obter_quantidade(self):
+    @property
+    def quantidade(self) -> int:
         return self.__quantidade
 
-    def obter_preco(self):
-        return self.__preco
+    @property
+    def preco_unitario(self) -> float:
+        return self.__preco_unitario
 
-    def calcular(self):
+    def calcular_total(self) -> float:
+        return self.__quantidade * self.__preco_unitario
 
-        return (
-            self.__quantidade *
-            self.__preco
-        )
+
+# ============================================================
+# 5. POLIMORFISMO
+# ------------------------------------------------------------
+# Duas subclasses implementam calcular_total() de formas
+# diferentes. A função calcular_item() trata ambas de maneira
+# uniforme, sem conhecer o tipo concreto.
+# ============================================================
+
+class ItemComFrete(ItemCalculavel):
+
+    def __init__(self, quantidade: int, preco: float, frete: float):
+        self.quantidade = quantidade
+        self.preco = preco
+        self.frete = frete
+
+    def calcular_total(self) -> float:
+        return (self.quantidade * self.preco) + self.frete
+
+
+class ItemSemFrete(ItemCalculavel):
+
+    def __init__(self, quantidade: int, preco: float):
+        self.quantidade = quantidade
+        self.preco = preco
+
+    def calcular_total(self) -> float:
+        return self.quantidade * self.preco
+
+
+def calcular_item(item: ItemCalculavel) -> float:
+    """Polimorfismo: aceita qualquer objeto que seja ItemCalculavel."""
+    return item.calcular_total()
 
 
 # ============================================================
 # 6. ASSOCIAÇÃO
+# ------------------------------------------------------------
+# O processador USA um item que foi criado em outro lugar.
+# O item tem vida própria e independe do processador.
 # ============================================================
 
 class ProcessadorItemPedido:
 
     def __init__(self, item):
-
-        """
-        Associação:
-
-        O ProcessadorItemPedido recebe
-        um ItemPedido que já existe.
-        """
-
         self.item = item
 
     def obter_produto(self):
-
         return self.item.produto
 
 
 # ============================================================
 # 7. AGREGAÇÃO
+# ------------------------------------------------------------
+# A lista agrega itens criados externamente. Se a lista for
+# destruída, os itens continuam existindo (relação "tem-um"
+# fraca).
 # ============================================================
 
 class ListaItensPedido:
 
     def __init__(self, itens):
-
-        """
-        Agregação:
-
-        A lista recebe itens que foram
-        criados externamente.
-        """
-
         self.itens = itens
 
-    def quantidade(self):
-
+    def quantidade(self) -> int:
         return len(self.itens)
 
-    def calcular_total(self):
-
-        total = 0
-
-        for item in self.itens:
-
-            total += (
-                item.subtotal +
-                item.frete_total
-            )
-
-        return total
+    def calcular_total(self) -> float:
+        return sum(
+            (item.subtotal + item.frete_total)
+            for item in self.itens
+        )
 
 
 # ============================================================
 # 8. COMPOSIÇÃO
+# ------------------------------------------------------------
+# Os itens são criados e gerenciados internamente pelo objeto.
+# Se o PedidoComItens for destruído, seus itens também somem
+# (relação "é-parte-de" forte).
 # ============================================================
 
 class PedidoComItens:
 
     def __init__(self):
-
-        """
-        Composição:
-
-        Os itens pertencem ao objeto
-        e são gerenciados internamente.
-        """
-
         self.__itens = []
 
-    def adicionar_item(
-        self,
-        quantidade,
-        preco_unitario
-    ):
-
-        item = ItemPedidoEspecial(
-            quantidade,
-            preco_unitario
+    def adicionar_item(self, quantidade: int, preco_unitario: float):
+        self.__itens.append(
+            ItemPedidoEspecial(quantidade, preco_unitario)
         )
 
-        self.__itens.append(item)
-
-    def calcular_total(self):
-
-        total = 0
-
-        for item in self.__itens:
-
-            total += item.calcular_total()
-
-        return total
-
-
-# ============================================================
-# 9. POLIMORFISMO
-# ============================================================
-
-class ItemComFrete(ItemPedidoInterface):
-
-    def __init__(
-        self,
-        quantidade,
-        preco,
-        frete
-    ):
-
-        self.quantidade = quantidade
-        self.preco = preco
-        self.frete = frete
-
-    def calcular(self):
-
-        return (
-            self.quantidade *
-            self.preco
-        ) + self.frete
-
-
-class ItemSemFrete(ItemPedidoInterface):
-
-    def __init__(
-        self,
-        quantidade,
-        preco
-    ):
-
-        self.quantidade = quantidade
-        self.preco = preco
-
-    def calcular(self):
-
-        return (
-            self.quantidade *
-            self.preco
-        )
-
-
-def calcular_item(item):
-
-    """
-    Polimorfismo:
-
-    A mesma função pode receber
-    diferentes tipos de objetos.
-    """
-
-    return item.calcular()
+    def calcular_total(self) -> float:
+        return sum(item.calcular_total() for item in self.__itens)

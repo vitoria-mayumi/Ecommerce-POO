@@ -65,7 +65,7 @@ def listar_pedidos_cliente(cliente_id):
         if not pedidos:
             return resposta_sucesso(
                 "O cliente ainda não possui pedidos.",
-
+                []
             )
 
         return resposta_sucesso(
