@@ -1,0 +1,295 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", system-ui, Arial, Helvetica, sans-serif;
+    background: #eef1f7;
+    color: #242a38;
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 0 auto;
+    padding: 28px 20px 40px;
+    max-width: 1080px;
+}
+
+h1 {
+    margin: 10px 0 24px;
+    text-align: center;
+    color: #2a2f45;
+    font-size: 30px;
+    letter-spacing: -0.3px;
+}
+
+/* Menu de navegacao */
+#menu {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 26px;
+}
+
+#menu button {
+    background: #fff;
+    color: #3457d5;
+    border: 2px solid #3457d5;
+    border-radius: 22px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+#menu button:hover {
+    background: #e8eeff;
+}
+
+/* Botao da tela que esta aberta */
+#menu button.ativo {
+    background: #3457d5;
+    color: #fff;
+    box-shadow: 0 3px 8px rgba(52, 87, 213, 0.35);
+}
+
+/* Cada tela é um cartão branco */
+section {
+    background: #fff;
+    border: 1px solid #e3e7ef;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(26, 33, 51, 0.07);
+    padding: 22px 24px 26px;
+    margin-bottom: 20px;
+}
+
+h2 {
+    margin: 0 0 18px;
+    font-size: 20px;
+    border-bottom: 2px solid #e3e7ef;
+    padding-bottom: 10px;
+}
+
+h3 {
+    margin: 22px 0 10px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #7b8395;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+h3:first-of-type {
+    margin-top: 0;
+}
+
+/* Linha de campos de formulário */
+.form {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+input,
+select {
+    padding: 8px 10px;
+    border: 1px solid #ccd2de;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    color: inherit;
+    background: #fff;
+    height: 36px;
+}
+
+input::placeholder {
+    color: #9aa2b2;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: #3457d5;
+    box-shadow: 0 0 0 3px rgba(52, 87, 213, 0.15);
+}
+
+button {
+    padding: 8px 16px;
+    height: 36px;
+    border: none;
+    border-radius: 6px;
+    background: #3457d5;
+    color: #fff;
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background: #2742a8;
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+/* Botao de excluir */
+button.excluir {
+    background: #c0392b;
+}
+
+button.excluir:hover {
+    background: #96281b;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid #edf0f5;
+}
+
+/* Altura fixa deixa as linhas iguais, mesmo as que têm campos.
+   Precisa ser maior que o conteúdo mais alto (os campos de ajuste
+   de estoque), senão a linha cresce e desalinha das outras. */
+tbody td {
+    height: 50px;
+}
+
+th {
+    background: #f7f8fb;
+    color: #6c7488;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid #e3e7ef;
+    white-space: nowrap;
+}
+
+th:first-child {
+    border-top-left-radius: 6px;
+}
+
+th:last-child {
+    border-top-right-radius: 6px;
+}
+
+tbody tr:nth-child(even) {
+    background: #fcfdfe;
+}
+
+tbody tr:hover {
+    background: #f2f6ff;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Etiqueta colorida do tipo de produto */
+.tipo {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 11px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
+.tipo-fisico {
+    background: #e4ebff;
+    color: #2742a8;
+}
+
+.tipo-digital {
+    background: #ece7fb;
+    color: #5b45c4;
+}
+
+.tipo-servico {
+    background: #fdf0d9;
+    color: #96681b;
+}
+
+/* Campos de ajuste de estoque dentro da tabela */
+#tabela-produtos input {
+    width: 58px;
+    height: 28px;
+    padding: 4px 6px;
+    text-align: center;
+}
+
+#tabela-produtos button {
+    height: 28px;
+    min-width: 32px;
+    padding: 4px 9px;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+/* Mantém os botões de ajuste juntos na mesma linha */
+#tabela-produtos td:last-child {
+    white-space: nowrap;
+}
+
+/* Aviso de tabela sem registros */
+tr.vazio td {
+    text-align: center;
+    color: #9aa2b2;
+    font-style: italic;
+}
+
+/* Afasta o "Finalizar pedido" da tabela de itens */
+#tela-pedidos table + .form {
+    margin-top: 16px;
+}
+
+/* Campos que aparecem só para alguns tipos de produto */
+.escondido {
+    display: none;
+}
+
+/* Cartão de cada pedido no histórico */
+.pedido {
+    border: 1px solid #e3e7ef;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.pedido h4 {
+    margin: 0;
+    padding: 11px 14px;
+    background: #f7f8fb;
+    border-bottom: 1px solid #e3e7ef;
+    font-size: 14px;
+    color: #3a4055;
+}
+
+.pedido table {
+    font-size: 13px;
+}
+
+.pedido tbody td {
+    height: 40px;
+}
+
+/* Totais do relatório de vendas */
+#relatorio-totais {
+    background: #f5f8ff;
+    border: 1px solid #d9e2fb;
+    border-left: 4px solid #3457d5;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 0 0 20px;
+    line-height: 1.9;
+}
