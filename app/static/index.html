@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-commerce POO</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>E-commerce POO</h1>
+
+<!-- Menu de navegação entre as telas -->
+<nav id="menu">
+    <button data-tela="produtos" onclick="mostrarTela('produtos')">Produtos</button>
+    <button data-tela="clientes" onclick="mostrarTela('clientes')">Clientes</button>
+    <button data-tela="pedidos" onclick="mostrarTela('pedidos')">Pedidos</button>
+    <button data-tela="relatorio" onclick="mostrarTela('relatorio')">Relatório de vendas</button>
+</nav>
+
+<!-- ========================= PRODUTOS ========================= -->
+<section class="tela" id="tela-produtos">
+    <h2>Produtos</h2>
+
+    <h3>Cadastrar produto</h3>
+    <div class="form">
+        <input type="text" id="produto-codigo" placeholder="Código">
+        <input type="text" id="produto-nome" placeholder="Nome">
+
+        <select id="produto-tipo" onchange="trocarTipo()">
+            <option value="fisico">Físico</option>
+            <option value="digital">Digital</option>
+            <option value="servico">Serviço</option>
+        </select>
+
+        <input type="number" id="produto-preco" placeholder="Preço" step="0.01">
+        <input type="number" id="produto-estoque" placeholder="Estoque">
+        <input type="number" id="produto-frete" placeholder="Frete">
+        <input type="number" id="produto-prazo" placeholder="Prazo (dias)">
+
+        <button onclick="salvarProduto()">Cadastrar</button>
+    </div>
+
+    <h3>Catálogo</h3>
+    <div class="form">
+        <input type="text" id="produto-busca" placeholder="Buscar por nome">
+        <button onclick="buscarProdutos()">Buscar</button>
+        <button onclick="carregarProdutos()">Ver todos</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nome</th>
+                <th>Tipo</th>
+                <th>Preço</th>
+                <th>Estoque</th>
+                <th>Detalhes</th>
+                <th>Ajustar estoque</th>
+            </tr>
+        </thead>
+        <tbody id="tabela-produtos"></tbody>
+    </table>
+</section>
+
+<!-- ========================= CLIENTES ========================= -->
+<section class="tela" id="tela-clientes">
+    <h2>Clientes</h2>
+
+    <h3>Cadastrar cliente</h3>
+    <div class="form">
+        <input type="text" id="cliente-nome" placeholder="Nome">
+        <input type="email" id="cliente-email" placeholder="Email">
+        <input type="text" id="cliente-endereco" placeholder="Endereço">
+        <button onclick="salvarCliente()">Cadastrar</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Endereço</th>
+            </tr>
+        </thead>
+        <tbody id="tabela-clientes"></tbody>
+    </table>
+</section>
+
+<!-- ========================== PEDIDOS ========================= -->
+<section class="tela" id="tela-pedidos">
+    <h2>Pedidos</h2>
+
+    <h3>Novo pedido</h3>
+    <div class="form">
+        <select id="pedido-cliente"></select>
+        <select id="pedido-produto"></select>
+        <input type="number" id="pedido-quantidade" value="1" min="1">
+        <button onclick="adicionarItem()">Adicionar item</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Quantidade</th>
+                <th>Remover</th>
+            </tr>
+        </thead>
+        <tbody id="tabela-itens"></tbody>
+    </table>
+
+    <div class="form">
+        <button onclick="criarPedido()">Finalizar pedido</button>
+    </div>
+
+    <h3>Pedidos do cliente</h3>
+    <div class="form">
+        <select id="pedido-historico"></select>
+        <button onclick="verPedidos()">Ver pedidos</button>
+    </div>
+
+    <div id="lista-pedidos"></div>
+</section>
+
+<!-- ========================= RELATÓRIO ======================== -->
+<section class="tela" id="tela-relatorio">
+    <h2>Relatório de vendas</h2>
+
+    <div class="form">
+        <button onclick="carregarRelatorio()">Gerar relatório</button>
+    </div>
+
+    <p id="relatorio-totais"></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nome</th>
+                <th>Quantidade vendida</th>
+                <th>Faturamento</th>
+            </tr>
+        </thead>
+        <tbody id="tabela-relatorio"></tbody>
+    </table>
+</section>
+
+<script src="script.js"></script>
+</body>
+</html>
